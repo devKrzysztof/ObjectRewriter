@@ -13,9 +13,18 @@ public class FileHandler {
     private FileHandler() {
     }
 
+    private static class ParentFileTypeHandler extends Handler {
+        @Override
+        void handle(Path dir) {
+            if (!Files.isDirectory(dir)) {
+                logger.error("File '{}' is not a directory", dir.toAbsolutePath());
+                throw new FileIOException("File is not a directory '" + dir.toAbsolutePath() + "'");
+            }
+            handleNext(dir);
+        }
+    }
 
     private static class PathPermissionHandler extends Handler {
-
         @Override
         void handle(Path dir) {
             if (!Files.isWritable(dir)) {
