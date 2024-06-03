@@ -3,6 +3,7 @@ package com.kw.objectrewriter.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -11,6 +12,22 @@ public class FileHandler {
     private static final Logger logger = LoggerFactory.getLogger(FileHandler.class);
 
     private FileHandler() {
+    }
+
+    private static class ParentExistenceHandler extends Handler {
+
+        @Override
+        void handle(Path dir) {
+            if (!Files.exists(dir)) {
+                try {
+                    Files.createDirectories(dir);
+                } catch (IOException e) {
+                    logger.error("Could not create suitable folder tree for path '{}' due to following exception: {}", dir.getParent(), e.getMessage(), e);
+                    throw new FileIOException("Could not create suitable folder tree for path " + dir.toAbsolutePath(), e);
+                }
+            }
+            handleNext(dir);
+        }
     }
 
     private static class ParentFileTypeHandler extends Handler {
