@@ -1,0 +1,6 @@
+package com.kw.objectrewriter.util;
+
+public class FileHandler {
+    private FileHandler() {
+    }
+}
