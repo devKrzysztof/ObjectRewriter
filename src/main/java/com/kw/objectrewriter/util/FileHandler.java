@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -14,8 +15,21 @@ public class FileHandler {
     private FileHandler() {
     }
 
-    private static class ParentExistenceHandler extends Handler {
+    public static void validateDirectory(String path) {
+        Handler.setHandlers(new ParentExistenceHandler(), new ParentFileTypeHandler(), new PathPermissionHandler())
+                .handle(createPath(path));
+    }
 
+    private static Path createPath(String path) {
+        try {
+            return Path.of(path);
+        } catch (InvalidPathException e) {
+            logger.error("There was problem with given path '{}': {}", path, e.getMessage(), e);
+            throw new FileIOException("There was problem with given path '" + path + "': " + e.getMessage(), e);
+        }
+    }
+
+    private static class ParentExistenceHandler extends Handler {
         @Override
         void handle(Path dir) {
             if (!Files.exists(dir)) {
