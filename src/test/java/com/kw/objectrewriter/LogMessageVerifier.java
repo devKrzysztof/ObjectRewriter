@@ -21,6 +21,10 @@ public class LogMessageVerifier implements AutoCloseable {
         logger.addAppender(appender);
     }
 
+    public void assertTraceMessageInLogs(String message) {
+        hasMessageWithLevel(message, Level.TRACE);
+    }
+
     public void assertErrorMessageInLogs(String message) {
         hasMessageWithLevel(message, Level.ERROR);
     }
