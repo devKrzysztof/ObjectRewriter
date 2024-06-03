@@ -1,5 +1,7 @@
 package com.kw.objectrewriter.reader;
 
+import com.kw.objectrewriter.LogMessageVerifier;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -29,6 +31,29 @@ public class RestApiConsumerTest {
 
         verify(httpClient, times(1)).send(eq(httpRequest), any());
         assertThat(result).isEqualTo(expected);
+    }
+
+    @DataProvider
+    private Object[] exceptionProvider() {
+        return new Object[][]{
+                {IOException.class, "Could not read response due to following error: null"},
+                {InterruptedException.class, "Request failed due to thread interruption: null"},
+        };
+    }
+
+    @Test(dataProvider = "exceptionProvider")
+    void shouldReturnEmptyOptionalWhenErrorOccured(Class<? extends Throwable> exception, String message) throws IOException, InterruptedException {
+        HttpClient httpClient = mock(HttpClient.class);
+        HttpRequest httpRequest = mock(HttpRequest.class);
+        when(httpClient.send(eq(httpRequest), any())).thenThrow(exception);
+        RestApiConsumer<?> restApiConsumer = new RestApiConsumer<>(httpClient, mock(InputStreamBodySubscriberProvider.class));
+
+        try (LogMessageVerifier verifier = new LogMessageVerifier(RestApiConsumer.class)) {
+            Optional<?> result = restApiConsumer.retrieveResponseBody(httpRequest);
+
+            assertThat(result).isEmpty();
+            verifier.assertErrorMessageInLogs(message);
+        }
     }
 
 }
